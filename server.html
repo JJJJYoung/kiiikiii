@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏡 움직임 감지 알리미</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0; /* 배경색 연한 회색 */
+            margin: 0;
+            padding: 20px; /* 여백 추가 */
+            box-sizing: border-box; /* 패딩 포함 크기 계산 */
+        }
+        .status-container {
+            text-align: center;
+            padding: 40px;
+            border-radius: 15px; /* 둥근 모서리 */
+            background-color: #fff; /* 하얀 배경 */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+            width: 90%; /* 컨테이너 너비 */
+            max-width: 500px; /* 최대 너비 제한 */
+        }
+        h1 {
+            color: #333; /* 어두운 글자색 */
+            margin-bottom: 20px;
+            font-size: 1.8em; /* 제목 크기 */
+        }
+        #motionStatus {
+            font-size: 3em; /* 상태 글자 크기 */
+            font-weight: bold;
+            color: #555; /* 기본 글자색 */
+            transition: color 0.5s ease; /* 색상 변화 부드럽게 */
+        }
+        .status-detected {
+            color: #e74c3c; /* 움직임 감지 시 붉은색 (강렬하게!) */
+        }
+        .status-no-motion {
+            color: #2ecc71; /* 움직임 없을 시 초록색 (평화롭게!) */
+        }
+        .status-loading {
+             color: #f39c12; /* 로딩 중 주황색 (기다리는 중!) */
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="status-container">
+        <h1>🏠 현재 움직임 감지 상태</h1>
+        <p id="motionStatus" class="status-loading">상태 불러오는 중...</p>
+        <div class="footer">
+            <p>ESP32 + HC-SR501 프로젝트</p>
+        </div>
+    </div>
+
+    <script>
+        // 👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇
+        // !!! 핵핵핵 중요 !!!
+        // 여기 URL을 네 서버에서 ESP32 상태를 알려주는 엔드포인트 주소로 바꿔야 해!
+        // 네 Node.js 서버 예시 코드에서 '/get-motion-status' 주소에 해당하는 URL이야.
+        // 예시: 'http://네_서버_IP_주소:포트_번호/get-motion-status'
+        // 예를 들어 네 컴퓨터 IP가 192.168.0.100이고 서버 포트가 3000이라면:
+        // const serverStatusUrl = 'http://192.168.0.100:3000/get-motion-status';
+        // 👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆
+        const serverStatusUrl = 'http://115.143.133.10:3000/motion_detected'; // <-- 여기를 네 서버 주소로 바꿔줘!
+
+        async function fetchMotionStatus() {
+            const statusElement = document.getElementById('motionStatus');
+            // 상태 불러오기 시작할 때 로딩 상태 표시
+            statusElement.textContent = '상태 불러오는 중...';
+            statusElement.className = 'status-loading'; // 로딩 중 스타일 적용
+
+            try {
+                // 설정된 서버 URL로 비동기 HTTP GET 요청 보내기
+                // 서버는 'detected' 또는 'no_motion' 같은 간단한 문자열을 응답으로 준다고 가정함!
+                const response = await fetch(serverStatusUrl);
+
+                // HTTP 응답 코드가 200 OK 같은 정상 범위가 아니면 에러 발생시키기
+                if (!response.ok) {
+                    throw new Error(`HTTP 오류 발생! 상태 코드: ${response.status}`);
+                }
+
+                // 서버 응답 본문을 텍스트로 읽어옴
+                const statusText = await response.text();
+                console.log("서버 응답 원본:", statusText); // 개발자 도구 콘솔에서 서버 응답 확인용
+
+                // 서버 응답 텍스트를 정리하고 소문자로 변환해서 비교
+                const cleanStatus = statusText.trim().toLowerCase();
+                console.log("처리된 서버 응답:", cleanStatus); // 처리된 응답 확인용
+
+                // 서버 응답에 따라 웹페이지 화면 업데이트
+                if (cleanStatus === 'detected') {
+                    statusElement.textContent = '🚨 움직임 감지됨! 🚨';
+                    statusElement.className = 'status-detected'; // 감지 스타일 적용 (빨간색)
+                } else if (cleanStatus === 'no_motion' || cleanStatus === 'no motion' || cleanStatus === '') {
+                     // 'no_motion', 'no motion' 또는 빈 문자열 등 움직임 없음을 나타내는 다양한 응답 처리
+                    statusElement.textContent = '✅ 움직임 없음';
+                    statusElement.className = 'status-no-motion'; // 감지 안 됨 스타일 적용 (초록색)
+                } else {
+                    // 예상치 못한 응답이 왔을 경우
+                    statusElement.textContent = `알 수 없는 상태: ${statusText}`;
+                     statusElement.className = ''; // 기본 스타일 유지 또는 에러 스타일 추가 가능
+                }
+
+            } catch (error) {
+                // 요청 실패 또는 에러 발생 시
+                console.error("상태를 불러오는 중 에러 발생:", error);
+                statusElement.textContent = '❌ 상태 불러오기 실패 ㅠㅠ';
+                statusElement.className = ''; // 기본 스타일 또는 에러 스타일 적용
+            }
+        }
+
+        // 🚀 페이지가 로드되자마자 바로 한번 상태 불러오기
+        fetchMotionStatus();
+
+        // ⏱️ 설정된 시간 간격마다 주기적으로 상태 업데이트 (예: 3초마다)
+        // 필요에 따라 시간(밀리초) 조절하세요! 너무 짧으면 서버에 부하가 갈 수 있어요.
+        const updateInterval = 3000; // 3000 밀리초 = 3초
+        setInterval(fetchMotionStatus, updateInterval);
+
+        console.log(`웹페이지가 ${updateInterval / 1000}초마다 서버 상태를 확인합니다.`);
+
+    </script>
+
+</body>
+</html>
