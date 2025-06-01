@@ -1,35 +1,56 @@
-// 필요한 모듈 가져오기
-const express = require('express'); // express 웹 프레임워크
-const app = express(); // express 애플리케이션 생성
-const port = 3000; // 서버가 사용할 포트 번호 (예: 3000)
+// express 웹 프레임워크
+const express = require('express');
+const app = express();
 
-// --- 여기서부터 네 프로젝트 관련 변수나 로직 ---
-let motionDetectedStatus = 'no_motion'; // 움직임 감지 상태 저장 변수 (초기값: 움직임 없음)
+// Vercel KV 사용을 위해 @vercel/kv 라이브러리 import
+// 설치: npm install @vercel/kv 또는 yarn add @vercel/kv
+const { createClient } = require('@vercel/kv');
 
-// ESP32에서 움직임 감지 알림을 받을 주소 (예: /motion-detected)
-// ESP32 코드는 이 주소로 HTTP GET 또는 POST 요청을 보낼 거야.
-app.get('/motion-detected', (req, res) => {
-    console.log('ESP32로부터 움직임 감지 알림을 받았습니다!');
-    motionDetectedStatus = 'detected'; // 상태를 'detected'로 업데이트
-
-    // ESP32에게 응답 (선택 사항)
-    res.send('Status Updated to Detected');
+// Vercel KV 클라이언트 초기화
+// Vercel 대시보드에서 KV 설정 후 제공되는 환경 변수를 사용
+const kv = createClient({
+  url: process.env.VERCEL_KV_URL,
+  token: process.env.VERCEL_KV_REST_TOKEN,
 });
 
-// 웹페이지에서 현재 상태를 요청할 주소 (예: /get-motion-status)
-// 네 웹페이지의 JavaScript 코드는 이 주소로 HTTP GET 요청을 보낼 거야.
-app.get('/get-motion-status', (req, res) => {
+// --- Vercel KV를 사용하는 로직 ---
+
+// ESP32에서 움직임 감지 알림을 받을 주소 (/api/motion-detected)
+app.get('/api/motion-detected', async (req, res) => {
+    console.log('ESP32로부터 움직임 감지 알림을 받았습니다!');
+    
+    try {
+        // Vercel KV에 'motion_status' 키로 'detected' 상태 저장 (60초 만료)
+        await kv.set('motion_status', 'detected', { ex: 60 });
+        console.log('Vercel KV에 상태 업데이트 완료: detected');
+        res.send('Status Updated to Detected in KV');
+    } catch (error) {
+        console.error('Vercel KV 업데이트 오류:', error);
+        res.status(500).send('Error updating status in KV');
+    }
+});
+
+// 웹페이지에서 현재 상태를 요청할 주소 (/api/get-motion-status)
+app.get('/api/get-motion-status', async (req, res) => {
     console.log('웹페이지로부터 상태 요청을 받았습니다.');
 
-    // 현재 상태를 응답으로 보냄
-    res.send(motionDetectedStatus); // 'detected' 또는 'no_motion' 문자열을 응답
+    try {
+        // Vercel KV에서 'motion_status' 키의 값 읽어오기
+        const motionStatus = await kv.get('motion_status');
+
+        // 값이 없거나 만료되었으면 'no_motion'으로 간주
+        const currentStatus = motionStatus || 'no_motion'; 
+        console.log('Vercel KV에서 읽은 상태:', currentStatus);
+
+        // 현재 상태를 응답으로 보냄
+        res.send(currentStatus);
+    } catch (error) {
+        console.error('Vercel KV 읽기 오류:', error);
+        res.status(500).send('Error reading status from KV');
+    }
 });
 
-// --- 여기까지 네 프로젝트 관련 로직 ---
+// --- Vercel KV 사용 로직 끝 ---
 
-// 서버 시작
-app.listen(port, () => {
-    console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
-    console.log(`ESP32 알림 주소: http://localhost:${port}/motion-detected`);
-    console.log(`웹페이지 상태 확인 주소: http://localhost:${port}/get-motion-status`);
-});
+// Express 앱을 Vercel 함수로 내보내기
+module.exports = app;
