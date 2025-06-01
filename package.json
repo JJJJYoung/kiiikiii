@@ -4,8 +4,6 @@
     "@vercel/kv": "^latest"
   },
   "scripts": {
-
     "vercel-build": ""
-
   }
 }
