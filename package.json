@@ -1,9 +1,5 @@
 {
   "dependencies": {
-    "express": "^5.1.0",
-    "@vercel/kv": "latest"
-  },
-  "scripts": {
-    "vercel-build": ""
+    "express": "^5.1.0"
   }
 }
