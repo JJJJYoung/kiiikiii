@@ -2,8 +2,8 @@
 const { createClient } = require('@vercel/kv');
 
 const kv = createClient({
-  url: process.env.VERCEL_KV_URL,
-  token: process.env.VERCEL_KV_REST_TOKEN,
+  url: process.env.KV_URL,
+  token: process.env.KV_REST_API_TOKEN,
 });
 
  // 이 함수가 Vercel에 의해 /api/motion-detected 경로로 실행될 거야
