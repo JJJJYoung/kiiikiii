@@ -24,6 +24,7 @@
     --font-weight-bold: 700;
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
+    --animate-custom-ping: custom-ping 3s ease-in-out infinite;
   }
 }
 @layer base {
@@ -178,20 +179,11 @@
   .relative {
     position: relative;
   }
-  .top-0 {
-    top: calc(var(--spacing) * 0);
-  }
-  .left-0 {
-    left: calc(var(--spacing) * 0);
-  }
   .mt-2 {
     margin-top: calc(var(--spacing) * 2);
   }
   .flex {
     display: flex;
-  }
-  .table {
-    display: table;
   }
   .h-80 {
     height: calc(var(--spacing) * 80);
@@ -208,11 +200,8 @@
   .w-full {
     width: 100%;
   }
-  .border-collapse {
-    border-collapse: collapse;
-  }
-  .resize {
-    resize: both;
+  .animate-custom-ping {
+    animation: var(--animate-custom-ping);
   }
   .flex-col {
     flex-direction: column;
@@ -226,18 +215,11 @@
   .rounded-full {
     border-radius: calc(infinity * 1px);
   }
-  .border {
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-  }
   .bg-purple-200 {
     background-color: var(--color-purple-200);
   }
   .bg-red-200 {
     background-color: var(--color-red-200);
-  }
-  .bg-red-500 {
-    background-color: var(--color-red-500);
   }
   .bg-teal-50 {
     background-color: var(--color-teal-50);
@@ -275,37 +257,34 @@
   .text-red-500 {
     color: var(--color-red-500);
   }
-  .underline {
-    text-decoration-line: underline;
-  }
-  .opacity-0 {
-    opacity: 0%;
-  }
-  .outline {
-    outline-style: var(--tw-outline-style);
-    outline-width: 1px;
-  }
 }
-@property --tw-border-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
+.custom-ping {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: #ff0000;
+  opacity: 0.75;
+  animation: custom-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.motion-detected .custom-ping {
+  opacity: 0.75;
+  animation: custom-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 @property --tw-font-weight {
   syntax: "*";
   inherits: false;
 }
-@property --tw-outline-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
+@keyframes custom-ping {
+  75%, 100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
-      --tw-border-style: solid;
       --tw-font-weight: initial;
-      --tw-outline-style: solid;
     }
   }
 }
