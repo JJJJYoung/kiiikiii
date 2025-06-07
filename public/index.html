@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<link href="./main.css" rel="stylesheet">
-  <title>Motion Sensor Web</title>
-  
-</head>
+  <title>Pulse Animation with Motion Status</title>
+<link rel="stylesheet" href="./main.css">
+ </head>
 <body class="bg-teal-50 h-screen flex items-center justify-center">
   <div class="relative w-80 h-80" id="pulseContainer">
-    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 0s;"></span>
-    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 0.5s;"></span>
-    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 1s;"></span>
-    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 1.5s;"></span>
+    <span class="custom-ping" style="animation-delay: 0s;"></span>
+    <span class="custom-ping" style="animation-delay: 0.5s;"></span>
+    <span class="custom-ping" style="animation-delay: 1s;"></span>
+    <span class="custom-ping" style="animation-delay: 1.5s;"></span>
     <div id="centralCircle" class="absolute w-full h-full rounded-full bg-purple-200 flex flex-col items-center justify-center">
       <div id="motionStatus" class="text-2xl font-bold text-gray-800 text-center">
         상태 불러오는 중...
@@ -27,16 +26,14 @@
   </div>
 
   <script>
-    const API_ENDPOINT = '/api/get-motion-status'; // 환경 변수로 설정하는 것이 좋음
-
     async function loadData() {
-      const response = await fetch(API_ENDPOINT);
+      const response = await fetch('/api/get-motion-status');
       const data = await response.json();
 
       const statusDiv = document.getElementById('motionStatus');
       const logList = document.getElementById('log');
       const pulseContainer = document.getElementById('pulseContainer');
-      const centralCircle = document.getElementById('centralCircle');
+      const centralCircle = document.getElementById('centralCircle'); // 중앙 원 요소
 
       if (data.error) {
         statusDiv.textContent = "에러!";
@@ -48,16 +45,16 @@
           statusDiv.textContent = "움직임 감지!";
           statusDiv.classList.remove('text-gray-500', 'text-green-500');
           statusDiv.classList.add('text-red-500');
-          pulseContainer.classList.add('motion-detected');
-          centralCircle.classList.remove('bg-purple-200');
-          centralCircle.classList.add('bg-red-200');
+          pulseContainer.classList.add('motion-detected'); // 움직임 감지 시 클래스 추가
+          centralCircle.classList.remove('bg-purple-200'); // 보라색 제거
+          centralCircle.classList.add('bg-red-200'); // 빨간색 추가
         } else {
           statusDiv.textContent = "안전!";
           statusDiv.classList.remove('text-gray-500', 'text-red-500');
           statusDiv.classList.add('text-green-500');
-          pulseContainer.classList.remove('motion-detected');
-          centralCircle.classList.remove('bg-red-200');
-          centralCircle.classList.add('bg-purple-200');
+          pulseContainer.classList.remove('motion-detected'); // 움직임 감지 해제 시 클래스 제거
+          centralCircle.classList.remove('bg-red-200'); // 빨간색 제거
+          centralCircle.classList.add('bg-purple-200'); // 보라색 추가
         }
 
         logList.innerHTML = '';

@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     console.log('ESP32로부터 움직임 감지 알림을 받았습니다!');
 
     try {
-        await kv.set('motion_status', 'detected', { ex: 60 }); // 60초 만료
+        await kv.set('motion_status', 'detected', { ex: 5 }); // 60초 만료
         console.log('Vercel KV에 상태 업데이트 완료: detected');
          // Vercel 서버리스 함수는 req, res 객체를 받아서 바로 응답을 보내는 방식이야
 

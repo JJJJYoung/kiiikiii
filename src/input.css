@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+@keyframes custom-ping {
+75%, 100% {
+transform: scale(1.5); /* 스케일 값을 살짝 줄여서 텍스트가 잘 보이게 */
+opacity: 0;
+}
+}
+.custom-ping {
+position: absolute;
+width: 100%;
+height: 100%;
+border-radius: 9999px;
+background-color: #ff0000; / 펄스 색깔 */
+opacity: 0.75;
+animation: custom-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
