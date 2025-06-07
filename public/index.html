@@ -1,149 +1,101 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📢움직임 감지 알리미📢</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f0f0; /* 배경색색 */
-            margin: 0;
-            padding: 20px; /* 여백 */
-            box-sizing: border-box; /* 패딩 포함 크기 계산 */
-        }
-         /* 작은 화면에서 body 패딩 줄이기 */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-        }
-
-        .status-container {
-            text-align: center;
-            padding: 40px;
-            border-radius: 15px; /* 둥근 모서리 */
-            background-color: #fff; /* 하얀 배경 */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
-            width: 90%; /* 컨테이너 너비 */
-            max-width: 500px; /* 최대 너비 제한 */
-        }
-        h1 {
-            color: #333; /* 어두운 글자색 */
-            margin-bottom: 20px;
-            font-size: 1.8em; /* 제목 크기 */
-        }
-        #motionStatus {
-            font-size: 3em; /* 상태 글자 크기 */
-            font-weight: bold;
-            color: #555; /* 기본 글자색 */
-            transition: color 0.5s ease; /* 색상 변화 부드럽게 */
-        }
-        .status-detected {
-            color: #e74c3c; /* 움직임 감지 시 붉은색 (강렬하게!) */
-        }
-        .status-no-motion {
-            color: #2ecc71; /* 움직임 없을 시 초록색 (평화롭게!) */
-        }
-        .status-loading {
-             color: #f39c12; /* 로딩 중 주황색 (기다리는 중!) */
-        }
-         /* 에러 상태 스타일 */
-        .status-error {
-            color: #95a5a6; /* 회색 */
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 0.9em;
-            color: #888;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Motion Sensor Web</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'custom': ['Pretendard-Regular', 'sans-serif'],
+          },
+          keyframes: {
+            ping: {
+              '75%, 100%': {
+                transform: 'scale(1.5)',
+                opacity: '0',
+              },
+            },
+          },
+          animation: {
+            'custom-ping': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
+          },
+        },
+      },
+    }
+  </script>
 </head>
-<body>
-
-    <div class="status-container">
-        <h1>🏠 현재 움직임 감지 상태</h1>
-        <p id="motionStatus" class="status-loading">상태 불러오는 중...</p>
-        <div class="footer">
-            <p>ESP32 + HC-SR501 프로젝트</p>
-        </div>
+<body class="bg-teal-50 h-screen flex items-center justify-center">
+  <div class="relative w-80 h-80" id="pulseContainer">
+    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 0s;"></span>
+    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 0.5s;"></span>
+    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 1s;"></span>
+    <span class="absolute top-0 left-0 w-full h-full rounded-full bg-red-500 opacity-0 animate-custom-ping" style="animation-delay: 1.5s;"></span>
+    <div id="centralCircle" class="absolute w-full h-full rounded-full bg-purple-200 flex flex-col items-center justify-center">
+      <div id="motionStatus" class="text-2xl font-bold text-gray-800 text-center">
+        상태 불러오는 중...
+      </div>
+      <div class="mt-2">
+        <p class="text-sm text-gray-600 text-center">최근 감지 시간:</p>
+        <ul id="log" class="text-sm text-gray-700 text-center">
+          <li>-</li>
+        </ul>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // 👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇
-        // Vercel 서버리스 함수 엔드포인트 주소!
-        // 네 Vercel 프로젝트의 'api' 폴더 안에 상태를 가져오는 함수 파일이 있다면
-        // 보통 이런 식으로 '/api/함수_파일_이름' 형태로 접근해!
-        // 예를 들어 'api/status.js' 파일이라면 URL은 '/api/status'가 되겠지!
-        // 서버리스 함수 코드는 이 HTML과 같은 Vercel 프로젝트 안에 있어야 해!
-        // 👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆
+  <script>
+    const API_ENDPOINT = '/api/get-motion-status'; // 환경 변수로 설정하는 것이 좋음
 
-        // 이 주소를 네 Vercel 서버리스 함수 엔드포인트 주소로 바꿔줘!
-        // 예시: '/api/get-motion-status' 또는 '/api/motion-status'
-        const serverStatusUrl = '/api/get-motion-status'; // <-- Vercel 함수 주소!
+    async function loadData() {
+      const response = await fetch(API_ENDPOINT);
+      const data = await response.json();
 
-        async function fetchMotionStatus() {
-            const statusElement = document.getElementById('motionStatus');
-            statusElement.textContent = '상태 불러오는 중...';
-            statusElement.classList.add('status-loading'); // 로딩 중 스타일 적용
-            statusElement.classList.remove('status-detected', 'status-no-motion', 'status-error'); // 기존 스타일 제거
+      const statusDiv = document.getElementById('motionStatus');
+      const logList = document.getElementById('log');
+      const pulseContainer = document.getElementById('pulseContainer');
+      const centralCircle = document.getElementById('centralCircle');
 
-
-            try {
-                // Vercel 서버리스 함수 엔드포인트로 HTTP GET 요청 보내기
-                // 서버리스 함수는 'detected' 또는 'no_motion' 같은 문자열을 응답으로 준다고 가정함!
-                const response = await fetch(serverStatusUrl);
-
-                if (!response.ok) {
-                     // HTTP 응답 코드가 200 OK 같은 정상 범위가 아니면 에러 발생시키기
-                    throw new Error(`HTTP 오류 발생! 상태 코드: ${response.status}`);
-                }
-
-                // 서버 응답 본문을 텍스트로 읽어옴 (서버리스 함수가 텍스트 응답 시)
-                // 만약 서버리스 함수가 JSON 응답 시: const statusData = await response.json();
-                const statusText = await response.text(); // 텍스트 응답 가정
-
-                console.log("서버 응답 원본:", statusText); // 개발자 도구 콘솔에서 서버 응답 확인용
-
-                // 서버 응답 텍스트를 정리하고 소문자로 변환해서 비교
-                const cleanStatus = statusText.trim().toLowerCase();
-                console.log("처리된 서버 응답:", cleanStatus); // 처리된 응답 확인용
-
-                // 서버 응답에 따라 웹페이지 화면 업데이트
-                if (cleanStatus === 'detected') {
-                    statusElement.textContent = '🚨 움직임 감지됨! 🚨';
-                    statusElement.classList.add('status-detected'); // 감지 스타일 적용 (빨간색)
-                } else if (cleanStatus === 'no_motion') {
-                    statusElement.textContent = '✅ 움직임 없음';
-                    statusElement.classList.add('status-no-motion'); // 감지 안 됨 스타일 적용 (초록색)
-                } else {
-                    // 예상치 못한 응답이 왔을 경우
-                    statusElement.textContent = `알 수 없는 상태: ${statusText}`;
-                    statusElement.className = ''; // 기본 스타일
-                }
-
-            } catch (error) {
-                // 요청 실패 또는 에러 발생 시
-                console.error("상태를 불러오는 중 에러 발생:", error.message);
-                statusElement.textContent = '❌ 상태 불러오기 실패 ㅠㅠ';
-                statusElement.classList.add('status-error'); // 에러 스타일 적용
-            }
+      if (data.error) {
+        statusDiv.textContent = "에러!";
+        statusDiv.classList.remove('text-green-500', 'text-red-500');
+        statusDiv.classList.add('text-gray-500');
+        logList.innerHTML = '<li class="text-gray-500">-</li>';
+      } else {
+        if (data.motionDetected) {
+          statusDiv.textContent = "움직임 감지!";
+          statusDiv.classList.remove('text-gray-500', 'text-green-500');
+          statusDiv.classList.add('text-red-500');
+          pulseContainer.classList.add('motion-detected');
+          centralCircle.classList.remove('bg-purple-200');
+          centralCircle.classList.add('bg-red-200');
+        } else {
+          statusDiv.textContent = "안전!";
+          statusDiv.classList.remove('text-gray-500', 'text-red-500');
+          statusDiv.classList.add('text-green-500');
+          pulseContainer.classList.remove('motion-detected');
+          centralCircle.classList.remove('bg-red-200');
+          centralCircle.classList.add('bg-purple-200');
         }
 
-        // 🚀 페이지가 로드되자마자 바로 한번 상태 불러오기
-        fetchMotionStatus();
+        logList.innerHTML = '';
+        if (data.log && data.log.length > 0) {
+          data.log.forEach(time => {
+            const li = document.createElement('li');
+            li.textContent = time;
+            logList.appendChild(li);
+          });
+        } else {
+          logList.innerHTML = '<li class="text-gray-500">기록 없음</li>';
+        }
+      }
+    }
 
-        // ⏱️ 설정된 시간 간격마다 주기적으로 상태 업데이트 (예: 3초마다)
-        // 필요에 따라 시간(밀리초) 조절하세요! 너무 짧으면 Vercel 함수 호출이 너무 잦아져서 비용이나 부하가 발생할 수 있어요.
-        const updateInterval = 3000; // 3000 밀리초 = 3초
-        setInterval(fetchMotionStatus, updateInterval);
-
-        console.log(`웹페이지가 ${updateInterval / 1000}초마다 서버 상태를 확인합니다.`);
-
-    </script>
+    loadData();
+    setInterval(loadData, 5000);
+  </script>
 </body>
 </html>
