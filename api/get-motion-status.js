@@ -15,9 +15,13 @@ module.exports = async (req, res) => {
       const currentStatus = motionStatus || 'no_motion';
       console.log('Vercel KV에서 읽은 상태:', currentStatus);
       // Vercel 서버리스 함수는 req, res 객체를 받아서 바로 응답을 보내는 방식이야
-      res.status(200).send(currentStatus);
+
+      // 여기서 res.send 대신 res.json 사용! 응답을 JSON 객체에 담아 보내자!
+      res.status(200).json({ status: currentStatus });
+
   } catch (error) {
       console.error('Vercel KV 읽기 오류:', error);
-      res.status(500).send('Error reading status from KV');
+      // 에러 발생 시에도 JSON으로 응답하는 게 좋아
+      res.status(500).json({ status: 'error', message: 'Error reading status from KV', error: error.message });
   }
 };
