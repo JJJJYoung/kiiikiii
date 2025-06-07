@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-custom-ping: custom-ping 3s ease-in-out infinite;
+
+
 @keyframes custom-ping {
 75%, 100% {
 transform: scale(1.5); /* 스케일 값을 살짝 줄여서 텍스트가 잘 보이게 */
@@ -14,6 +18,7 @@ opacity: 0;
   background-color: #ff0000;
   opacity: 0.75;
   animation: custom-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
 }
 
 /* 모션 감지 시에만 애니메이션 */
