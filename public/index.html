@@ -41,7 +41,7 @@
         statusDiv.classList.add('text-gray-500');
         logList.innerHTML = '<li class="text-gray-500">-</li>';
       } else {
-        if (data.motionDetected) {
+        if (data.status === "detected") {
           statusDiv.textContent = "움직임 감지!";
           statusDiv.classList.remove('text-gray-500', 'text-green-500');
           statusDiv.classList.add('text-red-500');
