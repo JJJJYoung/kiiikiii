@@ -5,28 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link href="/main.css" rel="stylesheet">
   <title>Motion Sensor Web</title>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            'custom': ['Pretendard-Regular', 'sans-serif'],
-          },
-          keyframes: {
-            ping: {
-              '75%, 100%': {
-                transform: 'scale(1.5)',
-                opacity: '0',
-              },
-            },
-          },
-          animation: {
-            'custom-ping': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
-          },
-        },
-      },
-    }
-  </script>
+  
 </head>
 <body class="bg-teal-50 h-screen flex items-center justify-center">
   <div class="relative w-80 h-80" id="pulseContainer">
