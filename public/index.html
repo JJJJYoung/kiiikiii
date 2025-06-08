@@ -4,86 +4,155 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pulse Animation with Motion Status</title>
-<link rel="stylesheet" href="./output.css">
- </head>
-<body class="bg-teal-50 h-screen flex items-center justify-center">
+  <link rel="stylesheet" href="./output.css">
+  <style>
+    /* 펄스 링 기본 스타일 */
+    .pulse-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: #ef4444;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* 초기 상태: 애니메이션 없음 */
+    .pulse-ring.inactive {
+      animation: none;
+      opacity: 0;
+    }
+
+    /* 활성 상태: 애니메이션 시작 */
+    .pulse-ring.active {
+      opacity: 0.75;
+      animation: var(--animate-custom-ping);
+    }
+
+    .status-transition {
+      transition: all 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-teal-50 min-h-screen flex items-center justify-center p-4">
   <div class="relative w-80 h-80" id="pulseContainer">
-    <!-- 초기에는 애니메이션 없이 시작 -->
-    <span class="animate-(--animate-custom-ping)" style="animation-delay: 0s;"></span>
-<span class="animate-custom-ping" style="animation-delay: 0.5s;"></span>
-<span class="animate-custom-ping" style="animation-delay: 1s;"></span>
-<span class="animate-custom-ping" style="animation-delay: 1.5s;"></span>
-    <div id="centralCircle" class="absolute w-full h-full rounded-full bg-purple-200 flex flex-col items-center justify-center">
-      <div class="mt-4">
-        <p class="text-2xl text-gray-600 font-bold text-center">👀움직임 감지 상태👀</p>
+    <!-- 펄스 링들 - 초기에는 inactive 상태 -->
+    <span class="pulse-ring inactive" style="animation-delay: 0s;"></span>
+    <span class="pulse-ring inactive" style="animation-delay: 0.5s;"></span>
+    <span class="pulse-ring inactive" style="animation-delay: 1s;"></span>
+    <span class="pulse-ring inactive" style="animation-delay: 1.5s;"></span>
+    
+    <div id="centralCircle" class="absolute w-full h-full rounded-full bg-purple-200 flex flex-col items-center justify-center status-transition shadow-lg">
+      <div class="text-center space-y-4">
+        <p class="text-xl text-gray-600 font-bold">👀 움직임 감지 상태 👀</p>
+        
+        <div id="motionStatus" class="text-3xl font-bold text-gray-800 status-transition">
+          상태 불러오는 중...
+        </div>
+        
+        <div class="text-xs text-gray-600 text-center mt-4 px-4">
+          ESP-32 + HC-SR501 프로젝트<br>
+          Team kiiikiii
+        </div>
+        
+        <!-- 상태 표시 아이콘 -->
+        <div id="statusIcon" class="text-4xl status-transition">⏳</div>
       </div>
-      <div id="motionStatus" class="text-2xl font-bold text-gray-800 text-center">
-        상태 불러오는 중...
-      </div>
-      <div id="motionStatus" class="text-xs font text-gray-800 text-center">
-        ESP-32 + HC-SR501 프로젝트 Team kiiikiii
-      </div>
-      
-      
     </div>
   </div>
 
+  <!-- 연결 상태 표시 -->
+  <div id="connectionStatus" class="fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-600">
+    연결 중...
+  </div>
+
   <script>
+    let isMotionDetected = false;
+    let isConnected = false;
+
     async function loadData() {
-      const response = await fetch('/api/get-motion-status');
-      const data = await response.json();
-
       const statusDiv = document.getElementById('motionStatus');
-      const logList = document.getElementById('log');
-      const pulseContainer = document.getElementById('pulseContainer');
+      const statusIcon = document.getElementById('statusIcon');
       const centralCircle = document.getElementById('centralCircle');
-      const pulseElements = document.querySelectorAll('#pulseContainer span'); // 펄스 요소들 선택
+      const connectionStatus = document.getElementById('connectionStatus');
+      const pulseElements = document.querySelectorAll('.pulse-ring');
 
-      if (data.error) {
-        statusDiv.textContent = "에러!";
-        statusDiv.classList.remove('text-green-500', 'text-red-500');
-        statusDiv.classList.add('text-gray-500');
-        logList.innerHTML = '<li class="text-gray-500">-</li>';
+      try {
+        // API 호출
+        const response = await fetch('/api/get-motion-status');
+        const data = await response.json();
+
+        isConnected = true;
+        connectionStatus.textContent = '연결됨';
+        connectionStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-green-200 text-green-800';
+
+        if (data.status === "detected") {
+          // 움직임 감지 상태
+          if (!isMotionDetected) {
+            isMotionDetected = true;
+            
+            statusDiv.textContent = "🚨 움직임 감지!";
+            statusDiv.className = 'text-3xl font-bold text-red-500 status-transition';
+            statusIcon.textContent = '🔴';
+            
+            centralCircle.className = 'absolute w-full h-full rounded-full bg-red-200 flex flex-col items-center justify-center status-transition shadow-lg';
+            
+            // 펄스 애니메이션 시작
+            pulseElements.forEach(element => {
+              element.classList.remove('inactive');
+              element.classList.add('active');
+            });
+          }
+          
+        } else {
+          // 안전 상태
+          if (isMotionDetected) {
+            isMotionDetected = false;
+            
+            statusDiv.textContent = "✅ 안전";
+            statusDiv.className = 'text-3xl font-bold text-green-500 status-transition';
+            statusIcon.textContent = '🟢';
+            
+            centralCircle.className = 'absolute w-full h-full rounded-full bg-purple-200 flex flex-col items-center justify-center status-transition shadow-lg';
+            
+            // 펄스 애니메이션 정지
+            pulseElements.forEach(element => {
+              element.classList.remove('active');
+              element.classList.add('inactive');
+            });
+          }
+        }
+
+      } catch (error) {
+        // 에러 처리
+        isConnected = false;
+        connectionStatus.textContent = '연결 실패';
+        connectionStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-red-200 text-red-800';
+        
+        statusDiv.textContent = "⚠️ 연결 오류";
+        statusDiv.className = 'text-3xl font-bold text-gray-500 status-transition';
+        statusIcon.textContent = '❌';
+        
+        centralCircle.className = 'absolute w-full h-full rounded-full bg-gray-200 flex flex-col items-center justify-center status-transition shadow-lg';
         
         // 에러 시 펄스 애니메이션 정지
         pulseElements.forEach(element => {
-          element.classList.remove('animate-custom-ping');
+          element.classList.remove('active');
+          element.classList.add('inactive');
         });
         
-      } else {
-        if (data.status === "detected") {
-          statusDiv.textContent = "움직임 감지!";
-          statusDiv.classList.remove('text-gray-500', 'text-green-500');
-          statusDiv.classList.add('text-red-500');
-          pulseContainer.classList.add('motion-detected');
-          centralCircle.classList.remove('bg-purple-200');
-          centralCircle.classList.add('bg-red-200');
-          
-          // 🔥 움직임 감지 시 펄스 애니메이션 시작
-          pulseElements.forEach(element => {
-            element.classList.add('animate-custom-ping');
-          });
-          
-        } else {
-          statusDiv.textContent = "안전!";
-          statusDiv.classList.remove('text-gray-500', 'text-red-500');
-          statusDiv.classList.add('text-green-500');
-          pulseContainer.classList.remove('motion-detected');
-          centralCircle.classList.remove('bg-red-200');
-          centralCircle.classList.add('bg-purple-200');
-          
-          // 🔥 안전 상태 시 펄스 애니메이션 정지
-          pulseElements.forEach(element => {
-            element.classList.remove('animate-custom-ping');
-          });
-        }
-
-        
+        console.error('Motion detection error:', error);
       }
     }
 
+    // 초기 로드 및 주기적 업데이트
     loadData();
-    setInterval(loadData, 5000);
+    const intervalId = setInterval(loadData, 2000);
+
+    // 페이지 언로드 시 정리
+    window.addEventListener('beforeunload', () => {
+      clearInterval(intervalId);
+    });
   </script>
 </body>
 </html>

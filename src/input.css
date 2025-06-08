@@ -1,8 +1,17 @@
 @import "tailwindcss";
+
 @theme {
+  /* 커스텀 애니메이션 정의 */
   --animate-custom-ping: custom-ping 3s ease-in-out infinite;
+  
+  /* 커스텀 폰트 패밀리 정의 */
+  --font-family-pretendard: 'Pretendard-Regular', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   @keyframes custom-ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.75;
+    }
     75%, 100% {
       transform: scale(1.5);
       opacity: 0;
@@ -10,26 +19,25 @@
   }
 }
 
-/* @theme 블록 밖으로 이동 */
-.custom-ping {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  background-color: #ff0000;
-  opacity: 0.75;
-  animation: custom-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+/* 커스텀 컴포넌트 스타일 */
+@layer components {
+  .custom-ping {
+    @apply absolute w-full h-full rounded-full bg-red-500 opacity-75;
+    animation: var(--animate-custom-ping);
+  }
+
+  /* 모션 감지 시에만 애니메이션 */
+  .motion-detected .custom-ping {
+    @apply opacity-75;
+    animation: var(--animate-custom-ping);
+  }
 }
 
-/* 모션 감지 시에만 애니메이션 */
- .motion-detected .custom-ping {
-  opacity: 0.75;
-  animation: custom-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-} 
-
+/* 폰트 정의 */
 @font-face {
-    font-family: 'Pretendard-Regular';
-    src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
+  font-family: 'Pretendard-Regular';
+  src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap; /* 폰트 로딩 최적화 */
 }
