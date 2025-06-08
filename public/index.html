@@ -83,7 +83,7 @@
         const data = await response.json();
 
         isConnected = true;
-        connectionStatus.textContent = '연결됨';
+        connectionStatus.textContent = '';
         connectionStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-green-200 text-green-800';
 
         if (data.status === "detected") {
