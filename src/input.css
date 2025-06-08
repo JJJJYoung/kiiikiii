@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@import url("https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff')");
 @theme {
   --animate-custom-ping: custom-ping 3s ease-in-out infinite;
 
@@ -27,3 +27,8 @@
   opacity: 0.75;
   animation: custom-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
 } 
+
+@theme {
+  
+  --font-Pretendard-Regular: "Pretend", sans-serif; 
+}
