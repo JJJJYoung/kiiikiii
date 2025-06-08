@@ -8,10 +8,11 @@
  </head>
 <body class="bg-teal-50 h-screen flex items-center justify-center">
   <div class="relative w-80 h-80" id="pulseContainer">
-    <span class="animate-custom-ping" style="animation-delay: 0s;"></span>
-    <span class="animate-custom-ping" style="animation-delay: 0.5s;"></span>
-    <span class="animate-custom-ping" style="animation-delay: 1s;"></span>
-    <span class="animate-custom-ping" style="animation-delay: 1.5s;"></span>
+    <!-- 초기에는 애니메이션 없이 시작 -->
+    <span class="" style="animation-delay: 0s;"></span>
+    <span class="" style="animation-delay: 0.5s;"></span>
+    <span class="" style="animation-delay: 1s;"></span>
+    <span class="" style="animation-delay: 1.5s;"></span>
     <div id="centralCircle" class="absolute w-full h-full rounded-full bg-purple-200 flex flex-col items-center justify-center">
       <div id="motionStatus" class="text-2xl font-bold text-gray-800 text-center">
         상태 불러오는 중...
@@ -33,28 +34,46 @@
       const statusDiv = document.getElementById('motionStatus');
       const logList = document.getElementById('log');
       const pulseContainer = document.getElementById('pulseContainer');
-      const centralCircle = document.getElementById('centralCircle'); // 중앙 원 요소
+      const centralCircle = document.getElementById('centralCircle');
+      const pulseElements = document.querySelectorAll('#pulseContainer span'); // 펄스 요소들 선택
 
       if (data.error) {
         statusDiv.textContent = "에러!";
         statusDiv.classList.remove('text-green-500', 'text-red-500');
         statusDiv.classList.add('text-gray-500');
         logList.innerHTML = '<li class="text-gray-500">-</li>';
+        
+        // 에러 시 펄스 애니메이션 정지
+        pulseElements.forEach(element => {
+          element.classList.remove('animate-custom-ping');
+        });
+        
       } else {
         if (data.status === "detected") {
           statusDiv.textContent = "움직임 감지!";
           statusDiv.classList.remove('text-gray-500', 'text-green-500');
           statusDiv.classList.add('text-red-500');
-          pulseContainer.classList.add('motion-detected'); // 움직임 감지 시 클래스 추가
-          centralCircle.classList.remove('bg-purple-200'); // 보라색 제거
-          centralCircle.classList.add('bg-red-200'); // 빨간색 추가
+          pulseContainer.classList.add('motion-detected');
+          centralCircle.classList.remove('bg-purple-200');
+          centralCircle.classList.add('bg-red-200');
+          
+          // 🔥 움직임 감지 시 펄스 애니메이션 시작
+          pulseElements.forEach(element => {
+            element.classList.add('animate-custom-ping');
+          });
+          
         } else {
           statusDiv.textContent = "안전!";
           statusDiv.classList.remove('text-gray-500', 'text-red-500');
           statusDiv.classList.add('text-green-500');
-          pulseContainer.classList.remove('motion-detected'); // 움직임 감지 해제 시 클래스 제거
-          centralCircle.classList.remove('bg-red-200'); // 빨간색 제거
-          centralCircle.classList.add('bg-purple-200'); // 보라색 추가
+          pulseContainer.classList.remove('motion-detected');
+          centralCircle.classList.remove('bg-red-200');
+          centralCircle.classList.add('bg-purple-200');
+          
+          // 🔥 안전 상태 시 펄스 애니메이션 정지
+          pulseElements.forEach(element => {
+            element.classList.remove('animate-custom-ping');
+          });
         }
 
         logList.innerHTML = '';
