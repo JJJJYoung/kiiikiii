@@ -78,16 +78,7 @@
           });
         }
 
-        logList.innerHTML = '';
-        if (data.log && data.log.length > 0) {
-          data.log.forEach(time => {
-            const li = document.createElement('li');
-            li.textContent = time;
-            logList.appendChild(li);
-          });
-        } else {
-          logList.innerHTML = '<li class="text-gray-500">기록 없음</li>';
-        }
+        
       }
     }
 
